@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAESM-SS</title>
+<style>
+body {margin:0;font-family:Arial,sans-serif;background:#000;color:#FFF;}
+a{text-decoration:none;color:#6ED6FF;}
+button{background:#6ED6FF;border:none;padding:10px 20px;margin:5px;color:#000;cursor:pointer;border-radius:5px;}
+button:hover{opacity:0.8;}
+.container{padding:20px;display:none;}
+.active{display:block;}
+input[type=text],input[type=password],textarea{width:90%;padding:10px;margin:5px 0 15px 0;border:1px solid #6ED6FF;border-radius:5px;background:#0F0F0F;color:#FFF;}
+textarea{height:80px;}
+.nav{display:flex;justify-content:space-around;background:#1A1A1A;padding:10px 0;position:fixed;bottom:0;width:100%;}
+.nav a{color:#6ED6FF;font-size:14px;}
+.chat-container,.group-chat-container{max-height:250px;overflow-y:scroll;margin-bottom:50px;border:1px solid #6ED6FF;padding:10px;background:#0F0F0F;display:flex;flex-direction:column;}
+.message{padding:5px 10px;margin:5px 0;border-radius:5px;max-width:80%;}
+.mine{background:#6ED6FF;color:#000;align-self:flex-end;}
+.other{background:#1A1A1A;color:#FFF;align-self:flex-start;}
+.stories,.reels{display:flex;overflow-x:auto;padding:10px 0;}
+.story{border:2px solid #6ED6FF;border-radius:50%;width:60px;height:60px;margin-right:10px;flex-shrink:0;}
+.reel{border:2px solid #6ED6FF;border-radius:10px;width:120px;height:200px;margin-right:10px;flex-shrink:0;background:#111;}
+@media(max-width:600px){.container{padding:10px;}input,textarea{width:95%;}button{width:90%;}}
+</style>
+</head>
+<body>
+
+<!-- شاشة البداية -->
+<div class="container active" id="splashScreen">
+<h1 style="text-align:center;color:#6ED6FF;">HAESM-SS</h1>
+<p style="text-align:center;">جارٍ التحميل...</p>
+</div>
+
+<!-- تسجيل الدخول -->
+<div class="container" id="loginScreen">
+<h2>تسجيل الدخول</h2>
+<input type="text" id="loginUser" placeholder="اسم المستخدم">
+<input type="password" id="loginPass" placeholder="كلمة المرور">
+<button onclick="login()">تسجيل الدخول</button>
+<p><a href="#" onclick="showScreen('registerScreen')">إنشاء حساب جديد</a></p>
+</div>
+
+<!-- إنشاء حساب -->
+<div class="container" id="registerScreen">
+<h2>إنشاء حساب</h2>
+<input type="text" id="regUser" placeholder="اسم المستخدم">
+<input type="password" id="regPass" placeholder="كلمة المرور">
+<button onclick="register()">إنشاء حساب</button>
+<p><a href="#" onclick="showScreen('loginScreen')">تسجيل الدخول</a></p>
+</div>
+
+<!-- الصفحة الرئيسية -->
+<div class="container" id="homeScreen">
+<h2>الصفحة الرئيسية</h2>
+<h3>الستوريات</h3>
+<div class="stories" id="storyList"></div>
+<h3>الريلز</h3>
+<div class="reels" id="reelsList"></div>
+<h3>الدردشة</h3>
+<div class="chat-container" id="chatBox"></div>
+<input type="text" id="chatInput" placeholder="اكتب رسالة">
+<button onclick="sendMessage()">إرسال</button>
+</div>
+
+<!-- المجموعات -->
+<div class="container" id="groupsScreen">
+<h2>المجموعات</h2>
+<div class="group-chat-container" id="groupChatBox"></div>
+<input type="text" id="groupInput" placeholder="اكتب رسالة للمجموعة">
+<button onclick="sendGroupMessage()">إرسال للمجموعة</button>
+</div>
+
+<!-- المكالمات الصوتية -->
+<div class="container" id="callsScreen">
+<h2>المكالمات الصوتية</h2>
+<p>واجهة محاكاة للمكالمات الصوتية</p>
+<button onclick="showScreen('homeScreen')">عودة للرئيسية</button>
+</div>
+
+<!-- الملف الشخصي -->
+<div class="container" id="profileScreen">
+<h2>الملف الشخصي</h2>
+<p>اسم المستخدم: <span id="profileUser"></span></p>
+<button onclick="showScreen('homeScreen')">العودة للرئيسية</button>
+</div>
+
+<!-- الإعدادات -->
+<div class="container" id="settingsScreen">
+<h2>الإعدادات</h2>
+<button onclick="logout()">تسجيل الخروج</button>
+</div>
+
+<!-- الإبلاغ -->
+<div class="container" id="reportScreen">
+<h2>الإبلاغ</h2>
+<select id="reportType">
+<option value="abuse">محتوى مسيء</option>
+<option value="adult">محتوى إباحي</option>
+<option value="threat">تهديد / تنمر</option>
+<option value="scam">احتيال</option>
+<option value="privacy">انتهاك الخصوصية</option>
+<option value="other">أخرى</option>
+</select>
+<textarea id="reportMessage" placeholder="نص الرسالة"></textarea>
+<button onclick="sendReport()">إرسال الإبلاغ</button>
+</div>
+
+<!-- شريط التنقل -->
+<div class="nav">
+<a href="#" onclick="showScreen('homeScreen')">الرئيسية</a>
+<a href="#" onclick="showScreen('groupsScreen')">المجموعات</a>
+<a href="#" onclick="showScreen('profileScreen')">الملف الشخصي</a>
+<a href="#" onclick="showScreen('settingsScreen')">الإعدادات</a>
+<a href="#" onclick="showScreen('callsScreen')">المكالمات</a>
+</div>
+
+<script>
+// البيانات
+let users = JSON.parse(localStorage.getItem("users")||"[]");
+let currentUser = null;
+let blockedUsers=["admin","root","test"]; // قائمة المحجوزة
+let userLastChanged={}; // تغيير اليوزر كل 10 أيام
+let mutedUsers={}; // المستخدمون المكتمون
+let bannedUsers={}; // المستخدمون المحظورون
+
+// محاكاة ستوريات وريلز
+const storyList = document.getElementById('storyList');
+for(let i=0;i<5;i++){ const s=document.createElement('div'); s.className='story'; storyList.appendChild(s);}
+const reelsList = document.getElementById('reelsList');
+for(let i=0;i<5;i++){ const r=document.createElement('div'); r.className='reel'; reelsList.appendChild(r);}
+
+// تبديل الصفحات
+function showScreen(screen){ document.querySelectorAll('.container').forEach(c=>c.classList.remove('active')); document.getElementById(screen).classList.add('active'); }
+
+// تسجيل الدخول
+function login(){
+const u=document.getElementById('loginUser').value;
+const p=document.getElementById('loginPass').value;
+const user=users.find(x=>x.username===u && x.pass===p);
+if(user){
+currentUser=user; document.getElementById('profileUser').innerText=currentUser.username;
+let lastChange=userLastChanged[u]; let now=new Date().getTime();
+if(!lastChange || now-lastChange>864000000){ alert("ينبغي عليك تغيير اسم المستخدم الآن!"); userLastChanged[u]=now;}
+showScreen('homeScreen');
+}else alert("يوزر أو كلمة مرور خاطئة!");
+}
+
+// إنشاء حساب
+function register(){
+const u=document.getElementById('regUser').value;
+const p=document.getElementById('regPass').value;
+if(!/^[a-z0-9._]+$/.test(u)){ alert("اليوزر غير مسموح به!"); return;}
+if(blockedUsers.includes(u)){ alert("اسم المستخدم محجوز!"); return;}
+if(users.some(x=>x.username===u)){ alert("اسم المستخدم موجود بالفعل!"); return;}
+const user={username:u, pass:p}; users.push(user); localStorage.setItem("users",JSON.stringify(users));
+alert("تم إنشاء الحساب بنجاح!"); showScreen('loginScreen');
+}
+
+// الدردشة الفردية
+function sendMessage(){
+const input=document.getElementById('chatInput'); if(input.value.trim()==="") return;
+const msg=document.createElement('div'); msg.className='message mine';
+msg.textContent=input.value; 
+if(bannedUsers[currentUser.username] || mutedUsers[currentUser.username]) { alert("لا يمكنك إرسال الرسائل حالياً"); return; }
+document.getElementById('chatBox').appendChild(msg); input.value='';
+}
+
+// المجموعات
+function sendGroupMessage(){
+const input=document.getElementById('groupInput'); if(input.value.trim()==="") return;
+const msg=document.createElement('div'); msg.className='message mine';
+msg.textContent=input.value; 
+if(bannedUsers[currentUser.username] || mutedUsers[currentUser.username]) { alert("لا يمكنك إرسال الرسائل حالياً"); return; }
+document.getElementById('groupChatBox').appendChild(msg); input.value='';
+}
+
+// الإبلاغ وفحص المحتوى عند الإبلاغ فقط
+function sendReport(){
+const type=document.getElementById('reportType').value;
+const msg=document.getElementById('reportMessage').value;
+if(msg.trim()==="") return alert("اكتب نص الرسالة");
+// محاكاة الحظر بعد 3 محاولات خلال ساعة
+if(!bannedUsers[currentUser.username]){ bannedUsers[currentUser.username]=0; }
+bannedUsers[currentUser.username]+=1;
+if(bannedUsers[currentUser.username]>=3){ alert("تم حظرك لمدة 24 ساعة"); }
+alert("تم إرسال الإبلاغ بنجاح: "+type);
+document.getElementById('reportMessage').value="";
+}
+
+// تسجيل الخروج
+function logout(){ currentUser=null; showScreen('loginScreen'); }
+
+// Splash
+setTimeout(()=>{ showScreen('loginScreen'); },2000);
+</script>
+
+</body>
+</html>
