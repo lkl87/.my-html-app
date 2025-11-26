@@ -1,2 +1,0 @@
-# .my-html-app
-Nothing 
